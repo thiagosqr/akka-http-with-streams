@@ -1,6 +1,6 @@
 package pl.zuchos.example.usage
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.ToResponseMarshallable._
 import akka.http.scaladsl.server.Directives._
@@ -13,6 +13,8 @@ import com.typesafe.config.ConfigFactory
 import pl.zuchos.example.PublisherService
 import pl.zuchos.example.PublisherService.respond
 import pl.zuchos.example.actors.DataPublisher.Publish
+import pl.zuchos.example.actors.TelegramActor
+import pl.zuchos.example.actors.TelegramActor.SendTelegram
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
@@ -52,11 +54,14 @@ object NaiveServer extends App with DataService with PublisherService[Data] {
   override implicit lazy val executor = system.dispatcher
   override implicit lazy val materializer = ActorFlowMaterializer()
 
+  val telegramActor = system.actorOf(Props[TelegramActor], "main")
+
   override def publisherBufferSize: Int = 1000
 
   override def dataProcessingDefinition: Sink[Data, Unit] = Flow[Data].map(d => {
-    println(d)
-    d
+
+    system.scheduler.scheduleOnce(10.seconds, telegramActor, SendTelegram(d))
+
   }).to(Sink.ignore)
 
   run()
