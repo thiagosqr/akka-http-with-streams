@@ -1,9 +1,9 @@
-package pl.zuchos.example.actors
+package com.github.thiagosqsr.telegramstream.actors
 
 import akka.actor.Actor
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
-import pl.zuchos.example.actors.DataPublisher.Publish
+import com.github.thiagosqsr.telegramstream.actors.DataPublisher.Publish
 
 import scala.collection.mutable
 import scala.util.{Failure, Success}

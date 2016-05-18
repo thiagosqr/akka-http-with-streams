@@ -14,7 +14,8 @@ object Dependencies {
 		    "com.typesafe.akka" %% "akka-http-scala-experimental"         % akkaStreamV,
 		    "com.typesafe.akka" %% "akka-http-spray-json-experimental"    % akkaStreamV,
 		    "com.typesafe.akka" %% "akka-http-testkit-scala-experimental" % akkaStreamV,
-		    "org.scalatest"     %% "scalatest"                            % scalaTestV % "test"
+		    "org.scalatest"     %% "scalatest"                            % scalaTestV % "test",
+				"com.google.guava"   % "guava"                           			% "19.0"
 		)
 	}
 }

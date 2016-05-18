@@ -1,4 +1,4 @@
-package pl.zuchos.example
+package com.github.thiagosqsr.telegramstream
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.HttpResponse
@@ -7,7 +7,7 @@ import akka.stream.FlowMaterializer
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
-import pl.zuchos.example.actors.{BufferOverflow, DataPublisher}
+import com.github.thiagosqsr.telegramstream.actors.{BufferOverflow, DataPublisher}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
@@ -17,8 +17,6 @@ trait PublisherService[D] {
   // Using the same names as in RouteTest we are making life easier
   // (no need to override them in test classes)
   implicit val system: ActorSystem
-
-  implicit def executor: ExecutionContextExecutor
 
   implicit val materializer: FlowMaterializer
 

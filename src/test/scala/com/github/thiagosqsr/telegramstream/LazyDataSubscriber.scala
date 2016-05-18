@@ -1,4 +1,4 @@
-package pl.zuchos.example
+package com.github.thiagosqsr.telegramstream
 
 import akka.actor.Actor
 import akka.stream.actor.ActorSubscriberMessage.OnNext
