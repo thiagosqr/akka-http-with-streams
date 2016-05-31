@@ -19,7 +19,8 @@ class DataPublisher[D](val bufferSize: Int) extends ActorPublisher[D] {
       cacheIfPossible(s)
     case Request(cnt) =>
       publishIfNeeded()
-    case Cancel => context.stop(self)
+    case Cancel =>
+      context.stop(self)
     case _ =>
   }
 

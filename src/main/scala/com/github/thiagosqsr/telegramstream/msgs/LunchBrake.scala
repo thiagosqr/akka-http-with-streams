@@ -5,4 +5,4 @@ import akka.http.scaladsl.model.DateTime
 /**
   * Created by thiago on 5/17/16.
   */
-case class LunchBrake(employee: String, body: String, start: DateTime)
+case class LunchBrake(id: String, employee: String, body: String, start: DateTime)

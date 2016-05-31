@@ -1,6 +1,7 @@
 package com.github.thiagosqsr.telegramstream.usage
 
-import java.util.concurrent.ConcurrentMap
+import java.util.UUID
+import java.util.concurrent.{ConcurrentMap, TimeUnit}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
@@ -16,11 +17,13 @@ import com.github.thiagosqsr.telegramstream.PublisherService.respond
 import com.github.thiagosqsr.telegramstream.actors.DataPublisher.Publish
 import com.github.thiagosqsr.telegramstream.actors.TelegramActor
 import com.github.thiagosqsr.telegramstream.msgs.LunchBrake
+import com.github.thiagosqsr.telegramstream.repos.RepositoriesModule
 import com.google.common.collect.MapMaker
 import com.typesafe.config.ConfigFactory
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.util.Try
 
 trait DataService {
 
@@ -34,12 +37,14 @@ trait DataService {
 
   def dataPublisherRef: ActorRef
 
+  def id = UUID.randomUUID().toString
+
   def routes: Route = {
     path("data") {
       (post & entity(as[String]) & parameter('sender)) {
         (dataAsString, sender: String) => {
           complete {
-            respond(dataPublisherRef ? Publish(LunchBrake(sender, dataAsString, DateTime.now)))
+            respond(dataPublisherRef ? Publish(LunchBrake(id, sender, dataAsString, DateTime.now)))
           }
         }
       }
@@ -50,13 +55,14 @@ trait DataService {
 /**
  * Server that runs our service
  */
-object TelegramServer extends App with DataService with PublisherService[LunchBrake] {
+object TelegramServer extends App with DataService with PublisherService[LunchBrake]
+                                  with RepositoriesModule {
 
   override implicit lazy val system = ActorSystem()
   override implicit lazy val executor = system.dispatcher
   override implicit lazy val materializer = ActorFlowMaterializer()
 
-  val lunchBrakes:ConcurrentMap[String,DateTime] = new MapMaker()
+  val lunchBrakesCache:ConcurrentMap[String,DateTime] = new MapMaker()
     .concurrencyLevel(4)
     .weakKeys()
     .makeMap()
@@ -66,8 +72,24 @@ object TelegramServer extends App with DataService with PublisherService[LunchBr
   override def publisherBufferSize: Int = 1000
 
   override def dataProcessingDefinition: Sink[LunchBrake, Unit] = Flow[LunchBrake].map(d => {
-    System.out.println("Registering employee checkout")
-    lunchBrakes.putIfAbsent(d.employee,d.start)
+//  lunchBrakesCache.putIfAbsent(d.employee,d.start)
+
+//    Try{
+//
+//    }.
+
+
+    try {
+
+      val f = lunchBrakes.insert(d)
+      //    Await.result(f.toFuture(), Duration(3, TimeUnit.SECONDS))
+      f
+
+    } catch {
+
+      case e: Exception => println(e)
+    }
+
   }).to(Sink.ignore)
 
   run()
