@@ -4,12 +4,14 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef}
 import akka.event.Logging
+import akka.http.scaladsl.model.DateTime
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
-import com.github.thiagosqsr.telegramstream.actors.DataPublisher.Publish
+import com.github.thiagosqsr.telegramstream.actors.MongoDataPublisher.Publish
 import com.github.thiagosqsr.telegramstream.msgs.LunchBrake
 import com.github.thiagosqsr.telegramstream.repos.RepositoriesModule
 import org.mongodb.scala._
+import com.mongodb.async.client.FindIterableImpl
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -32,27 +34,36 @@ class MongoDataPublisher extends ActorPublisher[LunchBrake] with RepositoriesMod
     case _ =>
   }
 
-  private def cacheIfPossible(l: LunchBrake) {
+  private def cacheIfPossible(d: LunchBrake) {
 
-      val o = lunchBrakes.insert(l)
+      val o = lunchBrakes.collection.insertOne(lunchBrakes.toDocument(d))
       val s: ActorRef = sender()
 
       o.subscribe(
           (l: Completed) => s ! Success(),
-          (error: Throwable) => s ! Failure(error),
-          () => log.debug("Done inserting into MongoDB")
+          (error: Throwable) => s ! Failure(error)
       )
 
-      Await.result(o.toFuture(), Duration(3, TimeUnit.SECONDS))
       publishIfNeeded()
   }
 
   def publishIfNeeded() = {
 
-    val iterator = lunchBrakes.collection.find().productIterator
+    val all = lunchBrakes.collection.find()
 
+    all.subscribe(
+      (d: Document) => {
 
-//    val o = lunchBrakes.collection.count()
+        if(isActive && totalDemand > 0){
+          onNext(lunchBrakes.toLunchBrake(d))
+          lunchBrakes.collection.deleteOne(d).toFuture()
+        }
+      },
+      (error: Throwable) => log.error(error,error.getMessage)
+
+    )
+
+    //    val o = lunchBrakes.collection.count()
 //    var count: Long = 0
 //
 //    o.subscribe(
@@ -61,16 +72,14 @@ class MongoDataPublisher extends ActorPublisher[LunchBrake] with RepositoriesMod
 //      () => log.debug("Done fetching from MongoDB")
 //    )
 //
-//    Await.result(o.toFuture(), Duration(3, TimeUnit.SECONDS))
+//      Await.result(all.toFuture(), Duration(5, TimeUnit.SECONDS))
 
-    while (iterator.hasNext && isActive && totalDemand > 0) {
-
-      val n = iterator.next()
-
-
-//      onNext(queue.dequeue())
-    }
+//    while (iterator.hasNext && isActive && totalDemand > 0) {
+//      val d: = iterator.next().asInstanceOf[Document]
+//      onNext(toD(d))
+//    }
   }
+
 }
 
 object MongoDataPublisher {

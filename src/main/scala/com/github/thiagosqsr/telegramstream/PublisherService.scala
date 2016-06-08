@@ -7,10 +7,13 @@ import akka.stream.FlowMaterializer
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
-import com.github.thiagosqsr.telegramstream.actors.{BufferOverflow, DataPublisher}
+import com.github.thiagosqsr.telegramstream.actors.{BufferOverflow, DataPublisher, MongoDataPublisher}
+import com.github.thiagosqsr.telegramstream.msgs.LunchBrake
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
+import org.mongodb.scala._
+
 
 trait PublisherService[D] {
 
@@ -22,7 +25,7 @@ trait PublisherService[D] {
 
   implicit val timeout: Timeout
 
-  def dataProcessingDefinition: Sink[D, Unit]
+  def dataProcessingDefinition: Sink[LunchBrake, Unit]
 
   def publisherBufferSize: Int
 
@@ -31,9 +34,13 @@ trait PublisherService[D] {
   private var dataPublisherReference: ActorRef = _
 
   def run() = {
-    dataPublisherReference = system.actorOf(Props[DataPublisher[D]](new DataPublisher[D](publisherBufferSize)))
-    val dataPublisher = ActorPublisher[D](dataPublisherRef)
+//    dataPublisherReference = system.actorOf(Props[DataPublisher[D]](new DataPublisher[D](publisherBufferSize)))
+//    val dataPublisher = ActorPublisher[D](dataPublisherRef)
+
+    dataPublisherReference = system.actorOf(Props[MongoDataPublisher](new MongoDataPublisher()))
+    val dataPublisher = ActorPublisher[LunchBrake](dataPublisherRef)
     Source(dataPublisher).runWith(dataProcessingDefinition)
+
   }
 }
 

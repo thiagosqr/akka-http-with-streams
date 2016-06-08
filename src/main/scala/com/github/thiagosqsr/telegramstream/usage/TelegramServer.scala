@@ -14,8 +14,9 @@ import akka.stream.{ActorFlowMaterializer, FlowMaterializer}
 import akka.util.Timeout
 import com.github.thiagosqsr.telegramstream.PublisherService
 import com.github.thiagosqsr.telegramstream.PublisherService.respond
-import com.github.thiagosqsr.telegramstream.actors.DataPublisher.Publish
+import com.github.thiagosqsr.telegramstream.actors.MongoDataPublisher.Publish
 import com.github.thiagosqsr.telegramstream.actors.TelegramActor
+import com.github.thiagosqsr.telegramstream.actors.TelegramActor.SendTelegram
 import com.github.thiagosqsr.telegramstream.msgs.LunchBrake
 import com.github.thiagosqsr.telegramstream.repos.RepositoriesModule
 import com.google.common.collect.MapMaker
@@ -74,21 +75,22 @@ object TelegramServer extends App with DataService with PublisherService[LunchBr
   override def dataProcessingDefinition: Sink[LunchBrake, Unit] = Flow[LunchBrake].map(d => {
 //  lunchBrakesCache.putIfAbsent(d.employee,d.start)
 
-//    Try{
+//    try {
 //
-//    }.
+//      val f = lunchBrakes.insert(d)
+//      //    Await.result(f.toFuture(), Duration(3, TimeUnit.SECONDS))
+//      f
+//
+//    } catch {
+//
+//      case e: Exception => println(e)
+//    }
 
+    val employee = d.employee;
 
-    try {
+    system.log.info(s"Agendando notifição de almoço para $employee")
 
-      val f = lunchBrakes.insert(d)
-      //    Await.result(f.toFuture(), Duration(3, TimeUnit.SECONDS))
-      f
-
-    } catch {
-
-      case e: Exception => println(e)
-    }
+    system.scheduler.scheduleOnce(60 seconds, telegramActor, SendTelegram(d.employee))
 
   }).to(Sink.ignore)
 

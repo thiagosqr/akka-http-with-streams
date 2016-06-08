@@ -8,12 +8,13 @@ import com.github.thiagosqsr.telegramstream.actors.TelegramActor.SendTelegram
   */
 class TelegramActor extends Actor{
   override def receive: Receive = {
-    case SendTelegram(d) => println(s"Enviando msg no telegram para $d")
+
+    case SendTelegram(d) => this.context.system.log.info(s"Enviando msg no telegram para $d")
   }
 }
 
 object TelegramActor{
 
-  case class SendTelegram(msgId: Int)
+  case class SendTelegram(msgId: String)
 
 }
