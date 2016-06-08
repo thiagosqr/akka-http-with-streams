@@ -1,3 +1,5 @@
+enablePlugins(JavaAppPackaging)
+
 lazy val commonSettings = Seq(
   organization := "pl.zuchos",
   version := "0.0.1-SNAPSHOT",
