@@ -88,7 +88,7 @@ object TelegramServer extends App with DataService with PublisherService[LunchBr
 
     val employee = d.employee;
 
-    system.log.info(s"Agendando notifição de almoço para $employee")
+    system.log.info(s"Agendando notificaÃ§Ã£o de almoÃ§o para $employee")
 
     system.scheduler.scheduleOnce(60 seconds, telegramActor, SendTelegram(d.employee))
 

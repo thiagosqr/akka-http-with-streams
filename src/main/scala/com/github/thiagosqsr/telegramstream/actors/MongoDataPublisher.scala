@@ -1,20 +1,14 @@
 package com.github.thiagosqsr.telegramstream.actors
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorRef}
 import akka.event.Logging
-import akka.http.scaladsl.model.DateTime
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
 import com.github.thiagosqsr.telegramstream.actors.MongoDataPublisher.Publish
 import com.github.thiagosqsr.telegramstream.msgs.LunchBrake
 import com.github.thiagosqsr.telegramstream.repos.RepositoriesModule
 import org.mongodb.scala._
-import com.mongodb.async.client.FindIterableImpl
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 /**
@@ -54,8 +48,11 @@ class MongoDataPublisher extends ActorPublisher[LunchBrake] with RepositoriesMod
     all.subscribe(
       (d: Document) => {
 
-        if(isActive && totalDemand > 0){
-          onNext(lunchBrakes.toLunchBrake(d))
+        val lunchBrake = lunchBrakes.toLunchBrake(d)
+
+        if(!lunchBrake.isEmpty && (isActive && totalDemand > 0)){
+          onNext(lunchBrake.get)
+          log.info(s"Removendo notificação com ID $lunchBrake.")
           lunchBrakes.collection.deleteOne(d).toFuture()
         }
       },

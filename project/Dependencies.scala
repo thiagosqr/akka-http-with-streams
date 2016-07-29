@@ -16,7 +16,6 @@ object Dependencies {
 		    "com.typesafe.akka" 			 	%% "akka-http-testkit-scala-experimental" % akkaStreamV,
 		    "org.scalatest"     			 	%% "scalatest"                            % scalaTestV % "test",
 				"com.google.guava"   			 	%  "guava"                           			% "19.0",
-			  "com.softwaremill.macwire" 	%% "macros" 															% "2.2.3",
 		    "org.mongodb.scala" 				%% "mongo-scala-driver" 									% "1.0.1"
 
 		)
