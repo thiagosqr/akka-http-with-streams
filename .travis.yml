@@ -4,4 +4,4 @@ scala:
 jdk:
   - oraclejdk8
 
-script: sbt ++$TRAVIS_SCALA_VERSION check-gen-type-classes test
+script: sbt ++$TRAVIS_SCALA_VERSION stage
